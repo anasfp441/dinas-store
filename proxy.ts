@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const res = NextResponse.next();
 
   const supabase = createServerClient(
@@ -16,9 +16,9 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookies) {
-cookies.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
+          cookies.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
         },
       },
     }
