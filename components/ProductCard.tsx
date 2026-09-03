@@ -34,7 +34,7 @@ function ProviderLogo({ product }: { product: Product }) {
   )
 }
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, isTopSeller = false }: { product: Product; isTopSeller?: boolean }) {
   const discount = hasDiscount(product)
   const percent = discountPercent(product)
   const price = effectivePrice(product)
@@ -49,6 +49,11 @@ export function ProductCard({ product }: { product: Product }) {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
+          {isTopSeller && product.sold > 0 && (
+            <span className="text-[10px] bg-warning/15 text-warning px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
+              🔥 Terlaris
+            </span>
+          )}
           {product.providers?.name && (
             <span className="text-[10px] text-muted">
               {product.providers.name}
@@ -75,6 +80,9 @@ export function ProductCard({ product }: { product: Product }) {
             </>
           )}
         </div>
+        <p className="text-[10px] text-muted mt-1">
+          Terjual {product.sold}
+        </p>
       </div>
     </Link>
   )

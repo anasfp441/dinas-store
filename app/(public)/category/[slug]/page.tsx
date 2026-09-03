@@ -40,6 +40,12 @@ export default async function CategoryPage({
     categories: raw.product_categories?.map((pc: any) => pc.categories) || [],
   })) as Product[]
 
+  const topSellerIds = [...products]
+    .filter((p) => p.sold > 0)
+    .sort((a, b) => b.sold - a.sold)
+    .slice(0, 5)
+    .map((p) => p.id)
+
   return (
     <main className="container mx-auto px-4 py-8">
       <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary mb-5 transition-colors">
@@ -55,7 +61,7 @@ export default async function CategoryPage({
       {products.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} isTopSeller={topSellerIds.includes(product.id)} />
           ))}
         </div>
       ) : (

@@ -18,7 +18,7 @@ export function ProductCatalog({
   const [query, setQuery] = useState('')
   const [categorySlug, setCategorySlug] = useState('all')
   const [providerSlug, setProviderSlug] = useState('all')
-  const [sort, setSort] = useState('terbaru')
+  const [sort, setSort] = useState('terlaris')
   const [showFilter, setShowFilter] = useState(false)
 
   const filtered = useMemo(() => {
@@ -48,10 +48,20 @@ export function ProductCatalog({
       result = [...result].sort((a, b) => a.name.localeCompare(b.name))
     } else if (sort === 'diskon') {
       result = [...result].sort((a, b) => discountPercent(b) - discountPercent(a))
+    } else if (sort === 'terlaris') {
+      result = [...result].sort((a, b) => b.sold - a.sold)
     }
 
     return result
   }, [products, query, categorySlug, providerSlug, sort])
+
+  const topSellerIds = useMemo(() => {
+    return [...products]
+      .filter((p) => p.sold > 0)
+      .sort((a, b) => b.sold - a.sold)
+      .slice(0, 5)
+      .map((p) => p.id)
+  }, [products])
 
   const filterCount =
     (categorySlug !== 'all' ? 1 : 0) + (providerSlug !== 'all' ? 1 : 0)
@@ -61,7 +71,7 @@ export function ProductCatalog({
     setQuery('')
     setCategorySlug('all')
     setProviderSlug('all')
-    setSort('terbaru')
+    setSort('terlaris')
   }
 
   function chipClass(active: boolean) {
@@ -104,6 +114,7 @@ export function ProductCatalog({
               className="input-field w-auto"
             >
               <option value="terbaru">Terbaru</option>
+              <option value="terlaris">Terlaris</option>
               <option value="termurah">Harga Termurah</option>
               <option value="termahal">Harga Termahal</option>
               <option value="az">A-Z</option>
@@ -181,7 +192,7 @@ export function ProductCatalog({
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} isTopSeller={topSellerIds.includes(product.id)} />
           ))}
         </div>
       ) : (
