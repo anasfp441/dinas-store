@@ -5,6 +5,7 @@ import { getSupabase } from '@/lib/supabase/client'
 import { Bill, BillStatus, BILL_STATUS_LABELS } from '@/types'
 import { formatPrice } from '@/utils/product'
 import { Check, X, RefreshCw } from 'lucide-react'
+import { AdminBillCard } from '@/components/AdminBillCard'
 
 const STATUS_STYLES: Record<BillStatus, string> = {
   pending: 'bg-warning/15 text-warning',
@@ -91,8 +92,21 @@ export default function AdminBillsPage() {
           <p className="text-muted font-medium">Belum ada pesanan</p>
         </div>
       ) : (
-        <div className="bg-surface rounded-2xl border border-border shadow-card overflow-hidden">
-          <table className="w-full text-sm">
+        <>
+          {/* Mobile view - Cards */}
+          <div className="grid grid-cols-1 gap-3 md:hidden">
+            {filtered.map((b) => (
+              <AdminBillCard
+                key={b.id}
+                bill={b}
+                onSetStatus={setStatus}
+              />
+            ))}
+          </div>
+
+          {/* Desktop view - Table */}
+          <div className="hidden md:block bg-surface rounded-2xl border border-border shadow-card overflow-hidden">
+            <table className="w-full text-sm">
             <thead className="bg-surface-raised border-b border-border">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-foreground">Produk</th>
@@ -151,6 +165,7 @@ export default function AdminBillsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   )

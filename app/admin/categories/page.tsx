@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { Category } from '@/types'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
+import { AdminCategoryCard } from '@/components/AdminCategoryCard'
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -49,8 +50,8 @@ export default function AdminCategoriesPage() {
     <div>
       <h1 className="text-2xl font-bold text-foreground mb-6">Daftar Kategori</h1>
 
-      <form onSubmit={handleSubmit} className="flex items-end gap-2 mb-6 bg-surface rounded-2xl border border-border p-4">
-        <div className="flex-1">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-end gap-2 mb-6 bg-surface rounded-2xl border border-border p-4">
+        <div className="flex-1 w-full sm:w-auto">
           <label className="block text-sm font-medium mb-1 text-foreground">Nama Kategori</label>
           <input
             value={name}
@@ -60,21 +61,36 @@ export default function AdminCategoriesPage() {
             required
           />
         </div>
-        <button type="submit" className="btn-primary text-sm">
-          {editing ? 'Simpan' : 'Tambah'}
-        </button>
-        {editing && (
-          <button
-            type="button"
-            onClick={() => { setEditing(null); setName('') }}
-            className="text-sm text-muted hover:text-foreground"
-          >
-            Batal
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button type="submit" className="btn-primary text-sm flex-1 sm:flex-none">
+            {editing ? 'Simpan' : 'Tambah'}
           </button>
-        )}
+          {editing && (
+            <button
+              type="button"
+              onClick={() => { setEditing(null); setName('') }}
+              className="px-4 py-2 text-sm text-muted hover:text-foreground border border-border rounded-xl"
+            >
+              Batal
+            </button>
+          )}
+        </div>
       </form>
 
-      <div className="bg-surface rounded-2xl border border-border shadow-card overflow-hidden">
+      {/* Mobile view - Cards */}
+      <div className="grid grid-cols-1 gap-3 md:hidden">
+        {categories.map((c) => (
+          <AdminCategoryCard
+            key={c.id}
+            category={c}
+            onEdit={() => { setEditing(c); setName(c.name) }}
+            onDelete={() => handleDelete(c.id)}
+          />
+        ))}
+      </div>
+
+      {/* Desktop view - Table */}
+      <div className="hidden md:block bg-surface rounded-2xl border border-border shadow-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-surface-raised border-b border-border">
             <tr>
@@ -88,8 +104,8 @@ export default function AdminCategoriesPage() {
               <tr key={c.id} className="border-t hover:bg-surface-raised transition-colors">
                 <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
                 <td className="px-4 py-3 text-muted">{c.slug}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1">
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => { setEditing(c); setName(c.name) }}
                       className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"

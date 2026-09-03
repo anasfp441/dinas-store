@@ -6,6 +6,7 @@ import { Profile } from '@/types'
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { Menu, X } from 'lucide-react'
 
 export default function AdminLayout({
   children,
@@ -15,6 +16,7 @@ export default function AdminLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const checkSession = async () => {
@@ -49,24 +51,33 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-background">
       <nav className="sticky top-0 z-40 bg-surface/80 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          <Link href="/admin" className="font-bold text-lg mr-3 text-foreground">Admin</Link>
-          {nav.map((item) => {
-            const active = pathname === item.href
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted hover:text-foreground hover:bg-background'
-                }`}
-              >
-                {item.label}
-              </Link>
-            )
-          })}
+        <div className="flex items-center gap-3">
+          <button
+            className="sm:hidden p-2 rounded-lg text-muted hover:text-foreground"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+          <Link href="/admin" className="font-bold text-lg text-foreground">Admin</Link>
+          <nav className={`${mobileMenuOpen ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row gap-1 sm:gap-3 absolute left-0 top-full w-full sm:w-auto bg-surface border-b sm:border-0 border-border sm:rounded-xl p-3 sm:p-0 shadow-lg sm:shadow-none`}>
+            {nav.map((item) => {
+              const active = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-3 py-2 sm:py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    active
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted hover:text-foreground hover:bg-background'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
+          </nav>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted hidden sm:inline">{profile?.full_name}</span>
@@ -82,7 +93,7 @@ export default function AdminLayout({
           </button>
         </div>
       </nav>
-      <main className="p-6">{children}</main>
+      <main className="p-4 sm:p-6">{children}</main>
     </div>
   )
 }

@@ -187,31 +187,66 @@ export default async function AdminReportsPage({
             Tidak ada data penjualan pada periode/filter ini
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-surface-raised border-b border-border">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold text-foreground">Produk</th>
-                <th className="px-4 py-3 text-left font-semibold text-foreground">Terjual</th>
-                <th className="px-4 py-3 text-left font-semibold text-foreground">Total Modal</th>
-                <th className="px-4 py-3 text-left font-semibold text-foreground">Total Omset</th>
-                <th className="px-4 py-3 text-left font-semibold text-foreground">Keuntungan</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Mobile view - Cards */}
+            <div className="grid grid-cols-1 gap-3 p-5 md:hidden">
               {details.map((d, i) => {
                 const profit = d.omset - d.modal
                 return (
-                  <tr key={i} className="border-t hover:bg-surface-raised transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{d.name}</td>
-                    <td className="px-4 py-3 text-muted">{d.qty}</td>
-                    <td className="px-4 py-3 font-mono text-muted">{formatPrice(d.modal)}</td>
-                    <td className="px-4 py-3 font-mono text-foreground">{formatPrice(d.omset)}</td>
-                    <td className="px-4 py-3 font-mono text-success font-semibold">{formatPrice(profit)}</td>
-                  </tr>
+                  <div key={i} className="bg-surface-raised rounded-xl p-4 border border-border">
+                    <h3 className="font-medium text-foreground text-sm">{d.name}</h3>
+                    <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                      <div>
+                        <span className="text-muted">Terjual</span>
+                        <span className="font-medium">{d.qty}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted">Modal</span>
+                        <span className="font-mono text-muted">{formatPrice(d.modal)}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted">Omset</span>
+                        <span className="font-mono text-foreground">{formatPrice(d.omset)}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted">Keuntungan</span>
+                        <span className="font-mono text-success font-semibold">{formatPrice(profit)}</span>
+                      </div>
+                    </div>
+                  </div>
                 )
               })}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop view - Table */}
+            <div className="hidden md:block">
+              <table className="w-full text-sm">
+                <thead className="bg-surface-raised border-b border-border">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">Produk</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">Terjual</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">Total Modal</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">Total Omset</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">Keuntungan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {details.map((d, i) => {
+                    const profit = d.omset - d.modal
+                    return (
+                      <tr key={i} className="border-t hover:bg-surface-raised transition-colors">
+                        <td className="px-4 py-3 font-medium text-foreground">{d.name}</td>
+                        <td className="px-4 py-3 text-muted">{d.qty}</td>
+                        <td className="px-4 py-3 font-mono text-muted">{formatPrice(d.modal)}</td>
+                        <td className="px-4 py-3 font-mono text-foreground">{formatPrice(d.omset)}</td>
+                        <td className="px-4 py-3 font-mono text-success font-semibold">{formatPrice(profit)}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

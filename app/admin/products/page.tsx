@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { Category, Product, Provider } from '@/types'
 import { ProductForm } from '@/components/ProductForm'
+import { AdminProductCard } from '@/components/AdminProductCard'
 import { Plus, Pencil, Trash2, X, Search } from 'lucide-react'
 import { formatPrice } from '@/utils/product'
 
@@ -173,7 +174,33 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      <div className="bg-surface rounded-2xl border border-border shadow-card overflow-hidden">
+      {/* Mobile view - Cards */}
+      <div className="grid grid-cols-1 gap-3 md:hidden">
+        {filtered.map((p) => (
+          <AdminProductCard
+            key={p.id}
+            product={p}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+          />
+        ))}
+        {filtered.length === 0 && (
+          <div className="bg-surface rounded-2xl border border-dashed border-border py-12 text-center">
+            <p className="text-muted mb-2">Produk tidak ditemukan</p>
+            {hasFilter && (
+              <button
+                onClick={resetFilters}
+                className="text-primary text-sm hover:underline"
+              >
+                Reset filter
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop view - Table */}
+      <div className="hidden md:block bg-surface rounded-2xl border border-border shadow-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-surface-raised border-b border-border">
             <tr>
