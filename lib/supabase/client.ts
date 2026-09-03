@@ -1,0 +1,1 @@
+export { createClient, getSupabase } from '@/utils/supabase/client'
