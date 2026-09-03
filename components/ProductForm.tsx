@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { Category, Product, ProductType, Provider, PRODUCT_TYPE_LABELS } from '@/types'
 
@@ -23,7 +23,21 @@ export function ProductForm({
   initialCategoryIds: string[]
   onDone: () => void
 }) {
-  const [type, setType] = useState<ProductType>(product?.type ?? 'pulsa')
+  const availableTypes = useMemo(() => {
+    const categoryNames = categories.map((c) => c.name.toLowerCase())
+    const filtered = Object.entries(PRODUCT_TYPE_LABELS).filter(([, label]) =>
+      categoryNames.includes(label.toLowerCase())
+    )
+    if (product) {
+      const exists = filtered.some(([v]) => v === product.type)
+      if (!exists) filtered.unshift([product.type, PRODUCT_TYPE_LABELS[product.type]])
+    }
+    return filtered.length > 0 ? filtered : Object.entries(PRODUCT_TYPE_LABELS)
+  }, [categories, product])
+
+  const [type, setType] = useState<ProductType>(
+    product?.type ?? (availableTypes[0]?.[0] as ProductType) ?? 'pulsa'
+  )
   const [providerId, setProviderId] = useState(product?.provider_id ?? '')
   const [name, setName] = useState(product?.name ?? '')
   const [kuota, setKuota] = useState(product?.kuota ?? '')
@@ -153,7 +167,7 @@ export function ProductForm({
             className="input-field"
             required
           >
-            {Object.entries(PRODUCT_TYPE_LABELS).map(([value, label]) => (
+            {availableTypes.map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
