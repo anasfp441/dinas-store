@@ -1,5 +1,3 @@
-export type ProductType = 'pulsa' | 'paket_data' | 'token_listrik' | 'apps_premium'
-
 export type Category = {
   id: string
   name: string
@@ -15,7 +13,6 @@ export type Provider = {
 
 export type Product = {
   id: string
-  type: ProductType
   provider_id: string | null
   name: string
   slug: string
@@ -67,11 +64,4 @@ export type Profile = {
   full_name: string | null
   role: 'admin' | 'user'
   created_at: string
-}
-
-export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
-  pulsa: 'Pulsa',
-  paket_data: 'Paket Data',
-  token_listrik: 'Token Listrik',
-  apps_premium: 'Apps Premium',
 }

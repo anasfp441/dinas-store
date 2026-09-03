@@ -2,22 +2,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { generateWaLink } from '@/utils/wa'
 import { Product } from '@/types'
-import { PUBLIC_PRODUCT_COLUMNS } from '@/utils/product'
 import { formatPrice, hasDiscount, discountPercent, effectivePrice } from '@/utils/product'
-import { PRODUCT_TYPE_LABELS } from '@/types'
 import { ArrowLeft } from 'lucide-react'
 import { BuyButton } from '@/components/BuyButton'
 
-export const dynamic = 'force-dynamic'
+import { generateWaLink } from '@/utils/wa'
 
-const TYPE_ICON: Record<string, string> = {
-  pulsa: '📱',
-  paket_data: '📶',
-  token_listrik: '⚡',
-  apps_premium: '💎',
-}
+export const dynamic = 'force-dynamic'
 
 export default async function ProductDetailPage({
   params,
@@ -26,12 +18,11 @@ export default async function ProductDetailPage({
 }) {
   const { slug } = await params
   const supabase = await createClient()
+
   const { data, error } = await supabase
     .from('products')
     .select(
-      `${PUBLIC_PRODUCT_COLUMNS},
-       providers(name, slug),
-       product_categories(categories(id, name, slug))`
+      'id,provider_id,name,slug,nominal,kuota,masa_aktif,harga_modal,harga_jual,harga_diskon,description,image_url,sold,is_active,created_at,providers(name,slug),product_categories(categories(id,name,slug))'
     )
     .eq('slug', slug)
     .eq('is_active', true)
@@ -39,10 +30,10 @@ export default async function ProductDetailPage({
 
   if (error || !data) notFound()
 
-  const product: Product = {
-    ...(data as any),
+  const product = {
+    ...data,
     categories: data.product_categories?.map((pc: any) => pc.categories) || [],
-  }
+  } as unknown as Product
 
   const waNumber = process.env.NEXT_PUBLIC_WA_NUMBER!
   const discount = hasDiscount(product)
@@ -50,15 +41,8 @@ export default async function ProductDetailPage({
   const price = effectivePrice(product)
 
   const dataRows: { label: string; value: string }[] = []
-  if (product.type === 'pulsa' || product.type === 'token_listrik') {
-    if (product.nominal) dataRows.push({ label: product.type === 'pulsa' ? 'Nominal Pulsa' : 'Nominal Token', value: product.nominal })
-  }
-  if (product.type === 'paket_data') {
-    if (product.kuota) dataRows.push({ label: 'Jumlah Paket', value: product.kuota })
-  }
-  if (product.type === 'apps_premium') {
-    if (product.nominal) dataRows.push({ label: 'Nama Paket', value: product.nominal })
-  }
+  if (product.nominal) dataRows.push({ label: 'Nominal', value: product.nominal })
+  if (product.kuota) dataRows.push({ label: 'Paket', value: product.kuota })
   if (product.masa_aktif) dataRows.push({ label: 'Masa Aktif', value: product.masa_aktif })
   if (product.providers?.name) dataRows.push({ label: 'Provider', value: product.providers.name })
 
@@ -91,7 +75,7 @@ export default async function ProductDetailPage({
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           ) : (
-            <div className="text-8xl">{TYPE_ICON[product.type]}</div>
+            <div className="text-8xl">📦</div>
           )}
           {discount && (
             <span className="absolute top-4 left-4 bg-danger text-white font-bold px-3 py-1.5 rounded-full text-sm shadow-sm">
@@ -102,11 +86,8 @@ export default async function ProductDetailPage({
         <div className="space-y-5">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-semibold">
-                {PRODUCT_TYPE_LABELS[product.type]}
-              </span>
               {product.providers?.name && (
-                <span className="text-xs bg-background text-muted border border-border px-2.5 py-1 rounded-full font-medium">
+                <span className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
                   {product.providers.name}
                 </span>
               )}

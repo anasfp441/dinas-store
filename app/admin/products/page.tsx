@@ -5,7 +5,6 @@ import { getSupabase } from '@/lib/supabase/client'
 import { Category, Product, Provider } from '@/types'
 import { ProductForm } from '@/components/ProductForm'
 import { Plus, Pencil, Trash2, X, Search } from 'lucide-react'
-import { PRODUCT_TYPE_LABELS } from '@/types'
 import { formatPrice } from '@/utils/product'
 
 export default function AdminProductsPage() {
@@ -25,7 +24,7 @@ export default function AdminProductsPage() {
     const { data } = await getSupabase()
       .from('products')
       .select(
-        'id, type, provider_id, name, slug, nominal, kuota, masa_aktif, harga_modal, harga_jual, harga_diskon, description, image_url, sold, is_active, created_at, providers(name, slug), product_categories(categories(id, name))'
+        'id, provider_id, name, slug, nominal, kuota, masa_aktif, harga_modal, harga_jual, harga_diskon, description, image_url, sold, is_active, created_at, providers(name, slug), product_categories(categories(id, name, slug))'
       )
       .order('created_at', { ascending: false })
     const normalized = data?.map((p: any) => ({
@@ -46,7 +45,6 @@ export default function AdminProductsPage() {
   }
 
   const [query, setQuery] = useState('')
-  const [filterType, setFilterType] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
 
   const filtered = useMemo(() => {
@@ -56,13 +54,12 @@ export default function AdminProductsPage() {
         p.name.toLowerCase().includes(query.toLowerCase()) ||
         (p.providers?.name || '').toLowerCase().includes(query.toLowerCase()) ||
         (p.nominal || '').toLowerCase().includes(query.toLowerCase())
-      const matchesType = filterType === 'all' || p.type === filterType
       const matchesStatus =
         filterStatus === 'all' ||
         (filterStatus === 'active' ? p.is_active : !p.is_active)
-      return matchesQuery && matchesType && matchesStatus
+      return matchesQuery && matchesStatus
     })
-  }, [products, query, filterType, filterStatus])
+  }, [products, query, filterStatus])
 
   async function handleDelete(id: string) {
     if (!confirm('Hapus produk ini?')) return
@@ -88,11 +85,10 @@ export default function AdminProductsPage() {
 
   function resetFilters() {
     setQuery('')
-    setFilterType('all')
     setFilterStatus('all')
   }
 
-  const hasFilter = query !== '' || filterType !== 'all' || filterStatus !== 'all'
+  const hasFilter = query !== '' || filterStatus !== 'all'
 
   return (
     <div>
@@ -115,7 +111,7 @@ export default function AdminProductsPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari produk/ provider / nominal..."
+              placeholder="Cari produk / provider / nominal..."
               className="input-field pl-10 pr-9"
             />
             {query && (
@@ -127,16 +123,6 @@ export default function AdminProductsPage() {
               </button>
             )}
           </div>
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="input-field w-auto"
-          >
-            <option value="all">Semua Tipe</option>
-            {Object.entries(PRODUCT_TYPE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -192,7 +178,7 @@ export default function AdminProductsPage() {
           <thead className="bg-surface-raised border-b border-border">
             <tr>
               <th className="px-4 py-3 text-left font-semibold text-foreground">Produk</th>
-              <th className="px-4 py-3 text-left font-semibold text-foreground">Tipe</th>
+              <th className="px-4 py-3 text-left font-semibold text-foreground">Kategori</th>
               <th className="px-4 py-3 text-left font-semibold text-foreground">Modal</th>
               <th className="px-4 py-3 text-left font-semibold text-foreground">Harga</th>
               <th className="px-4 py-3 text-left font-semibold text-foreground">Diskon</th>
@@ -207,12 +193,21 @@ export default function AdminProductsPage() {
                 <td className="px-4 py-3 font-medium text-foreground">
                   {p.name}
                   <div className="text-xs text-muted">
-                    {p.providers?.name || '-'}</div>
+                    {p.providers?.name || '-'}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full">
-                    {PRODUCT_TYPE_LABELS[p.type]}
-                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {(p.categories || []).length > 0 ? (
+                      p.categories!.map((c) => (
+                        <span key={c.id} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          {c.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-muted">-</span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 font-mono text-muted text-xs">
                   {formatPrice(p.harga_modal)}

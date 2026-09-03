@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Product } from '@/types'
-import { PRODUCT_TYPE_LABELS } from '@/types'
 import { formatPrice, hasDiscount, discountPercent, effectivePrice } from '@/utils/product'
 
 function ProviderLogo({ product }: { product: Product }) {
@@ -39,10 +38,7 @@ export function ProductCard({ product }: { product: Product }) {
   const discount = hasDiscount(product)
   const percent = discountPercent(product)
   const price = effectivePrice(product)
-  const dataLabel =
-    product.type === 'paket_data'
-      ? product.kuota
-      : product.nominal
+  const dataLabel = product.kuota || product.nominal || ''
 
   return (
     <Link
@@ -53,9 +49,6 @@ export function ProductCard({ product }: { product: Product }) {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-wide">
-            {PRODUCT_TYPE_LABELS[product.type]}
-          </span>
           {product.providers?.name && (
             <span className="text-[10px] text-muted">
               {product.providers.name}

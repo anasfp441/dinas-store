@@ -1,7 +1,7 @@
 import { Product } from '@/types'
 
 export const PUBLIC_PRODUCT_COLUMNS =
-  'id,type,provider_id,name,slug,kuota,masa_aktif,harga_jual,harga_diskon,description,image_url,sold,is_active,created_at'
+  'id,provider_id,name,slug,nominal,kuota,masa_aktif,harga_jual,harga_diskon,description,image_url,sold,is_active,created_at'
 
 export function effectivePrice(p: Product): number {
   return p.harga_diskon &&
@@ -25,7 +25,7 @@ export function formatPrice(n: number): string {
 }
 
 export function productDataLabel(p: Product): string {
-  if (p.type === 'paket_data' && p.kuota) return p.kuota
+  if (p.kuota) return p.kuota
   if (p.masa_aktif) return p.masa_aktif
   return ''
 }
