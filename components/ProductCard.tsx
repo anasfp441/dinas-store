@@ -65,7 +65,7 @@ export function ProductCard({ product, isTopSeller = false }: { product: Product
         </h2>
         <p className="text-xs text-muted truncate">
           {dataLabel ? dataLabel : ''}
-          {product.masa_aktif ? (dataLabel ? ' • ' : '') + product.masa_aktif : ''}
+          {product.masa_aktif ? (dataLabel ? ' • ' : '') + product.masa_aktif + ' Hari' : ''}
         </p>
         <div className="mt-1.5 flex items-center gap-2">
           <p className="text-primary font-bold text-sm">{formatPrice(price)}</p>
