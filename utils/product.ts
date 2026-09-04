@@ -29,3 +29,14 @@ export function productDataLabel(p: Product): string {
   if (p.masa_aktif) return `${p.masa_aktif} Hari`
   return ''
 }
+
+export function sortProductsNumerically(products: Product[]): Product[] {
+  return [...products].sort((a, b) => {
+    const numA = parseInt(a.name.replace(/\D/g, ''), 10) || 0
+    const numB = parseInt(b.name.replace(/\D/g, ''), 10) || 0
+    if (numA !== numB) {
+      return numA - numB
+    }
+    return a.name.localeCompare(b.name)
+  })
+}

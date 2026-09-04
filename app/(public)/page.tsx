@@ -3,23 +3,20 @@ import { ProductCatalog } from '@/components/ProductCatalog'
 import { Product, Category, Provider } from '@/types'
 import { PUBLIC_PRODUCT_COLUMNS } from '@/utils/product'
 import Link from 'next/link'
-import { Zap, Server, Package, BadgeCheck } from 'lucide-react'
+import { Zap, Calendar, Phone, Ticket, PlugZap, LayoutGrid, Wifi, Gift, Signal } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-const categories_icons: Record<string, any> = {
-  pulsa: Zap,
-  listrik: Server,
-  'paket-data': Package,
-  'apps-premium': BadgeCheck,
-}
-
-const category_order: Record<string, number> = {
-  pulsa: 0,
-  'paket-data': 1,
-  'token-listrik': 2,
-  'apps-premium': 3,
-}
+const menuItems = [
+  { name: 'Pulsa', icon: Signal, href: '/pulsa' },
+  { name: 'Masa Aktif', icon: Calendar, href: '/masa-aktif' },
+  { name: 'Paket Data', icon: Wifi, href: '/paket-data' },
+  { name: 'Kartu Perdana', icon: Gift, href: '/kartu-perdana' },
+  { name: 'Telfon & SMS', icon: Phone, href: '/telfon-sms' },
+  { name: 'Voucher Data', icon: Ticket, href: '/voucher-data' },
+  { name: 'Token Listrik', icon: PlugZap, href: '/token-listrik' },
+  { name: 'Voucher Apps', icon: LayoutGrid, href: '/voucher-apps' },
+]
 
 async function getProducts(): Promise<Product[]> {
   const supabase = await createClient()
@@ -79,36 +76,27 @@ export default async function CatalogPage() {
     getProviders(),
   ])
 
-  const sortedCategories = [...categories].sort(
-    (a, b) => (category_order[a.slug] ?? 99) - (category_order[b.slug] ?? 99)
-  )
-
   return (
     <main className="container mx-auto px-4 py-8">
-      {categories.length > 0 && (
-        <section className="mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {sortedCategories.map((category) => {
-              const Icon = categories_icons[category.slug] || Package
-              return (
-                <Link
-                  key={category.id}
-                  href={`/category/${category.slug}`}
-                  className="group bg-surface border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/40 hover:shadow-card-hover transition-all"
-                >
-                  <div className="bg-primary/10 p-2.5 rounded-xl group-hover:bg-primary group-hover:text-white transition-colors">
-                    <Icon className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground text-sm">{category.name}</p>
-                    <p className="text-xs text-muted">Lihat produk</p>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </section>
-      )}
+      <section className="mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+          {menuItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="group bg-surface border border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:border-primary/40 transition-all"
+              >
+                <div className="bg-primary/10 p-2 rounded-lg group-hover:bg-primary transition-colors">
+                  <Icon className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
+                </div>
+                <p className="text-xs font-medium text-foreground text-center">{item.name}</p>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
 
       <ProductCatalog
         products={products}

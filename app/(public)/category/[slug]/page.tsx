@@ -29,7 +29,7 @@ export default async function CategoryPage({
     .select(
       `${PUBLIC_PRODUCT_COLUMNS},
        providers(name, slug),
-       product_categories(categories(id, name, slug))`
+       product_categories!inner(categories(id, name, slug))`
     )
     .eq('product_categories.category_id', category.id)
     .eq('is_active', true)
