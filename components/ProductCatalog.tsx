@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { ProductCard } from '@/components/ProductCard'
 import { Product, Category, Provider } from '@/types'
 import { effectivePrice, discountPercent } from '@/utils/product'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 
 export function ProductCatalog({
   products,
@@ -19,7 +19,6 @@ export function ProductCatalog({
   const [categorySlug, setCategorySlug] = useState('all')
   const [providerSlug, setProviderSlug] = useState('all')
   const [sort, setSort] = useState('terlaris')
-  const [showFilter, setShowFilter] = useState(false)
 
   const filtered = useMemo(() => {
     let result = products.filter((p) => {
@@ -40,7 +39,11 @@ export function ProductCatalog({
       return matchesQuery && matchesCategory && matchesProvider
     })
 
-    if (sort === 'termurah') {
+    if (sort === 'terbaru') {
+      result = [...result].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    } else if (sort === 'terlaris') {
+      result = [...result].sort((a, b) => b.sold - a.sold)
+    } else if (sort === 'termurah') {
       result = [...result].sort((a, b) => effectivePrice(a) - effectivePrice(b))
     } else if (sort === 'termahal') {
       result = [...result].sort((a, b) => effectivePrice(b) - effectivePrice(a))
@@ -48,8 +51,6 @@ export function ProductCatalog({
       result = [...result].sort((a, b) => a.name.localeCompare(b.name))
     } else if (sort === 'diskon') {
       result = [...result].sort((a, b) => discountPercent(b) - discountPercent(a))
-    } else if (sort === 'terlaris') {
-      result = [...result].sort((a, b) => b.sold - a.sold)
     }
 
     return result
@@ -63,23 +64,13 @@ export function ProductCatalog({
       .map((p) => p.id)
   }, [products])
 
-  const filterCount =
-    (categorySlug !== 'all' ? 1 : 0) + (providerSlug !== 'all' ? 1 : 0)
-  const hasActiveFilter = query !== '' || filterCount > 0
+  const hasActiveFilter = query !== '' || categorySlug !== 'all' || providerSlug !== 'all'
+
 
   function resetFilters() {
     setQuery('')
     setCategorySlug('all')
     setProviderSlug('all')
-    setSort('terlaris')
-  }
-
-  function chipClass(active: boolean) {
-    return `px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-      active
-        ? 'bg-primary text-white shadow-sm'
-        : 'bg-background text-muted border border-border hover:border-primary/40 hover:text-primary'
-    }`
   }
 
   return (
@@ -94,7 +85,7 @@ export function ProductCatalog({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari produk, provider, nominal... (contoh: pulsa 10, data 1GB)"
+              placeholder="Cari produk, provider, nominal..."
               className="input-field pl-10 pr-9"
             />
             {query && (
@@ -107,86 +98,57 @@ export function ProductCatalog({
             )}
           </div>
 
-          <div className="flex gap-2 items-center">
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="input-field w-auto"
-            >
-              <option value="terbaru">Terbaru</option>
-              <option value="terlaris">Terlaris</option>
-              <option value="termurah">Harga Termurah</option>
-              <option value="termahal">Harga Termahal</option>
-              <option value="az">A-Z</option>
-              <option value="diskon">Diskon Terbesar</option>
-            </select>
-            <button
-              onClick={() => setShowFilter(!showFilter)}
-              className="flex items-center gap-2 border border-border rounded-xl px-4 py-2.5 text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary transition-colors"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              Filter
-              {filterCount > 0 && (
-                <span className="bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                  {filterCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
+          <select
+            value={categorySlug}
+            onChange={(e) => setCategorySlug(e.target.value)}
+            className="input-field w-auto"
+          >
+            <option value="all">Semua Kategori</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.slug}>{c.name}</option>
+            ))}
+          </select>
 
-        {showFilter && (
-          <div className="mt-4 pt-4 border-t border-border space-y-3">
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">Kategori</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setCategorySlug('all')}
-                  className={chipClass(categorySlug === 'all')}
-                >
-                  Semua
-                </button>
-                {categories.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setCategorySlug(c.slug)}
-                    className={chipClass(categorySlug === c.slug)}
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {providers.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-foreground mb-2">Provider</p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setProviderSlug('all')}
-                    className={chipClass(providerSlug === 'all')}
-                  >
-                    Semua
-                  </button>
-                  {providers.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => setProviderSlug(p.slug)}
-                      className={chipClass(providerSlug === p.slug)}
-                    >
-                      {p.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+          <select
+            value={providerSlug}
+            onChange={(e) => setProviderSlug(e.target.value)}
+            className="input-field w-auto"
+          >
+            <option value="all">Semua Provider</option>
+            {providers.map((p) => (
+              <option key={p.id} value={p.slug}>{p.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="input-field w-auto"
+          >
+            <option value="terbaru">Terbaru</option>
+            <option value="terlaris">Terlaris</option>
+            <option value="termurah">Termurah</option>
+            <option value="termahal">Termahal</option>
+            <option value="az">A-Z</option>
+            <option value="diskon">Diskon</option>
+          </select>
+
+          {hasActiveFilter && (
+            <button
+              onClick={resetFilters}
+              className="text-sm text-danger hover:underline whitespace-nowrap self-end"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+        <div className="mt-3 text-sm text-muted">
+          Menampilkan {filtered.length} dari {products.length} produk
+        </div>
       </div>
 
       <div className="text-sm text-muted mb-4">
-        {hasActiveFilter
-          ? `Menampilkan ${filtered.length} dari ${products.length} produk`
-          : `${filtered.length} produk tersedia`}
+        {filtered.length} produk tersedia
       </div>
 
       {filtered.length > 0 ? (
