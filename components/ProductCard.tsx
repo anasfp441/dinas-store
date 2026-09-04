@@ -38,7 +38,9 @@ export function ProductCard({ product, isTopSeller = false }: { product: Product
   const discount = hasDiscount(product)
   const percent = discountPercent(product)
   const price = effectivePrice(product)
-  const dataLabel = product.kuota || product.nominal || ''
+  const dataLabel = product.kuota
+    ? `${product.kuota} GB`
+    : product.nominal || ''
 
   return (
     <Link

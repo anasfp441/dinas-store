@@ -25,7 +25,7 @@ export function formatPrice(n: number): string {
 }
 
 export function productDataLabel(p: Product): string {
-  if (p.kuota) return p.kuota
-  if (p.masa_aktif) return p.masa_aktif
+  if (p.kuota) return `${p.kuota} GB`
+  if (p.masa_aktif) return `${p.masa_aktif} Hari`
   return ''
 }
