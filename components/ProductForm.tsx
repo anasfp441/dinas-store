@@ -122,10 +122,13 @@ export function ProductForm({
     const jual = parseInt(hargaJual) || 0
     const diskon = hargaDiskon ? parseInt(hargaDiskon) : null
 
+    const providerName = providers.find((p) => p.id === providerId)?.name ?? ''
+    const slugBase = providerName ? `${providerName} ${name.trim()}` : name.trim()
+
     const payload = {
       provider_id: providerId,
       name: name.trim(),
-      slug: slugify(name),
+      slug: slugify(slugBase),
       kuota: kuota || null,
       masa_aktif: masaAktif || null,
       harga_modal: modal,
