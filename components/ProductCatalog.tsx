@@ -114,7 +114,7 @@ export function ProductCatalog({
             onChange={(e) => setProviderSlug(e.target.value)}
             className="input-field w-auto"
           >
-            <option value="all">Semua Provider</option>
+            <option value="all">Semua Product</option>
             {providers.map((p) => (
               <option key={p.id} value={p.slug}>{p.name}</option>
             ))}
