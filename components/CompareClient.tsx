@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Product } from '@/types'
 import { effectivePrice, formatPrice, hasDiscount } from '@/utils/product'
-import { ArrowLeftRight, GitCompareArrows, Trash2 } from 'lucide-react'
+import { ArrowLeftRight, GitCompareArrows, Minus, Plus, Trash2 } from 'lucide-react'
 
 function parseNumber(value: string | null): number | null {
   if (!value) return null
@@ -43,6 +43,8 @@ function diffText(a: number | null, b: number | null, format: (n: number) => str
 export function CompareClient({ products }: { products: Product[] }) {
   const [idA, setIdA] = useState('')
   const [idB, setIdB] = useState('')
+  const [qtyA, setQtyA] = useState(1)
+  const [qtyB, setQtyB] = useState(1)
 
   const productA = useMemo(() => products.find((p) => p.id === idA) || null, [products, idA])
   const productB = useMemo(() => products.find((p) => p.id === idB) || null, [products, idB])
@@ -60,19 +62,27 @@ export function CompareClient({ products }: { products: Product[] }) {
   const metrics: Metric[] | null = useMemo(() => {
     if (!productA || !productB) return null
 
-    const priceA = effectivePrice(productA)
-    const priceB = effectivePrice(productB)
-    const quotaA = getQuotaGB(productA)
-    const quotaB = getQuotaGB(productB)
-    const daysA = getDays(productA)
-    const daysB = getDays(productB)
+    const unitPriceA = effectivePrice(productA)
+    const unitPriceB = effectivePrice(productB)
+    const totalPriceA = unitPriceA * qtyA
+    const totalPriceB = unitPriceB * qtyB
 
-    const perGbA = quotaA != null ? priceA / quotaA : null
-    const perGbB = quotaB != null ? priceB / quotaB : null
-    const perDayA = daysA != null ? priceA / daysA : null
-    const perDayB = daysB != null ? priceB / daysB : null
-    const gbPerDayA = quotaA != null && daysA != null ? quotaA / daysA : null
-    const gbPerDayB = quotaB != null && daysB != null ? quotaB / daysB : null
+    const unitQuotaA = getQuotaGB(productA)
+    const unitQuotaB = getQuotaGB(productB)
+    const totalQuotaA = unitQuotaA != null ? unitQuotaA * qtyA : null
+    const totalQuotaB = unitQuotaB != null ? unitQuotaB * qtyB : null
+
+    const unitDaysA = getDays(productA)
+    const unitDaysB = getDays(productB)
+    const totalDaysA = unitDaysA != null ? unitDaysA * qtyA : null
+    const totalDaysB = unitDaysB != null ? unitDaysB * qtyB : null
+
+    const perGbA = totalQuotaA != null ? totalPriceA / totalQuotaA : null
+    const perGbB = totalQuotaB != null ? totalPriceB / totalQuotaB : null
+    const perDayA = totalDaysA != null ? totalPriceA / totalDaysA : null
+    const perDayB = totalDaysB != null ? totalPriceB / totalDaysB : null
+    const gbPerDayA = totalQuotaA != null && totalDaysA != null ? totalQuotaA / totalDaysA : null
+    const gbPerDayB = totalQuotaB != null && totalDaysB != null ? totalQuotaB / totalDaysB : null
 
     const fmtRp = (n: number) => `Rp ${Math.round(n).toLocaleString('id-ID')}`
     const fmtGb = (n: number) => `${Number(n.toFixed(2)).toLocaleString('id-ID')} GB`
@@ -81,31 +91,40 @@ export function CompareClient({ products }: { products: Product[] }) {
 
     return [
       {
-        label: 'Harga',
-        a: formatPrice(priceA),
-        b: formatPrice(priceB),
-        aNum: priceA,
-        bNum: priceB,
+        label: 'Jumlah Beli',
+        a: `${qtyA}x`,
+        b: `${qtyB}x`,
+        aNum: qtyA,
+        bNum: qtyB,
+        better: 'none',
+        selisih: qtyA === qtyB ? 'Sama saja' : `${qtyA > qtyB ? 'A' : 'B'} beli ${Math.abs(qtyA - qtyB)}x lebih banyak`,
+      },
+      {
+        label: 'Total Harga',
+        a: qtyA > 1 ? `${formatPrice(totalPriceA)} (${qtyA}x @ ${formatPrice(unitPriceA)})` : formatPrice(totalPriceA),
+        b: qtyB > 1 ? `${formatPrice(totalPriceB)} (${qtyB}x @ ${formatPrice(unitPriceB)})` : formatPrice(totalPriceB),
+        aNum: totalPriceA,
+        bNum: totalPriceB,
         better: 'lower',
-        selisih: diffText(priceA, priceB, fmtRp),
+        selisih: diffText(totalPriceA, totalPriceB, fmtRp),
       },
       {
-        label: 'Kuota Data',
-        a: quotaA != null ? fmtGb(quotaA) : '-',
-        b: quotaB != null ? fmtGb(quotaB) : '-',
-        aNum: quotaA,
-        bNum: quotaB,
+        label: 'Total Kuota Data',
+        a: totalQuotaA != null ? (qtyA > 1 ? `${fmtGb(totalQuotaA)} (${qtyA}x ${fmtGb(unitQuotaA!)})` : fmtGb(totalQuotaA)) : '-',
+        b: totalQuotaB != null ? (qtyB > 1 ? `${fmtGb(totalQuotaB)} (${qtyB}x ${fmtGb(unitQuotaB!)})` : fmtGb(totalQuotaB)) : '-',
+        aNum: totalQuotaA,
+        bNum: totalQuotaB,
         better: 'higher',
-        selisih: diffText(quotaA, quotaB, fmtGb),
+        selisih: diffText(totalQuotaA, totalQuotaB, fmtGb),
       },
       {
-        label: 'Masa Aktif',
-        a: daysA != null ? `${fmtNum(daysA)} Hari` : '-',
-        b: daysB != null ? `${fmtNum(daysB)} Hari` : '-',
-        aNum: daysA,
-        bNum: daysB,
+        label: 'Total Masa Aktif',
+        a: totalDaysA != null ? (qtyA > 1 ? `${fmtNum(totalDaysA)} Hari (${qtyA}x ${fmtNum(unitDaysA!)}H)` : `${fmtNum(totalDaysA)} Hari`) : '-',
+        b: totalDaysB != null ? (qtyB > 1 ? `${fmtNum(totalDaysB)} Hari (${qtyB}x ${fmtNum(unitDaysB!)}H)` : `${fmtNum(totalDaysB)} Hari`) : '-',
+        aNum: totalDaysA,
+        bNum: totalDaysB,
         better: 'higher',
-        selisih: diffText(daysA, daysB, fmtDay),
+        selisih: diffText(totalDaysA, totalDaysB, fmtDay),
       },
       {
         label: 'Harga per GB',
@@ -135,26 +154,31 @@ export function CompareClient({ products }: { products: Product[] }) {
         selisih: diffText(gbPerDayA, gbPerDayB, fmtNum),
       },
     ]
-  }, [productA, productB])
+  }, [productA, productB, qtyA, qtyB])
 
   function swap() {
     setIdA(idB)
     setIdB(idA)
+    setQtyA(qtyB)
+    setQtyB(qtyA)
   }
 
   function reset() {
     setIdA('')
     setIdB('')
+    setQtyA(1)
+    setQtyB(1)
   }
 
-  const sameProduct = idA !== '' && idA === idB
+  const sameProductAndQty = idA !== '' && idA === idB && qtyA === qtyB
 
   return (
     <div className="space-y-6">
       <div className="bg-surface rounded-2xl border border-border shadow-card p-4">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-end">
-          <div>
-            <label className="block text-xs font-semibold text-muted mb-1.5">Produk A</label>
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
+          {/* Section Produk A */}
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-muted">Produk A</label>
             <select
               value={idA}
               onChange={(e) => setIdA(e.target.value)}
@@ -168,20 +192,42 @@ export function CompareClient({ products }: { products: Product[] }) {
                 </option>
               ))}
             </select>
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs text-muted font-medium">Jumlah Beli:</span>
+              <div className="flex items-center border border-border rounded-xl bg-surface overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setQtyA((q) => Math.max(1, q - 1))}
+                  className="p-1.5 hover:bg-surface-raised text-muted hover:text-foreground transition-colors"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+                <span className="px-3 text-sm font-bold text-foreground">{qtyA}x</span>
+                <button
+                  type="button"
+                  onClick={() => setQtyA((q) => Math.min(99, q + 1))}
+                  className="p-1.5 hover:bg-surface-raised text-muted hover:text-foreground transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
 
+          {/* Button Tukar */}
           <button
             onClick={swap}
             disabled={!productA && !productB}
             title="Tukar posisi A dan B"
-            className="btn-primary text-sm flex items-center gap-1.5 self-end disabled:opacity-40 disabled:cursor-not-allowed"
+            className="btn-primary text-sm flex items-center justify-center gap-1.5 self-center md:self-end disabled:opacity-40 disabled:cursor-not-allowed my-2 md:my-0"
           >
             <ArrowLeftRight className="w-4 h-4" />
             Tukar
           </button>
 
-          <div>
-            <label className="block text-xs font-semibold text-muted mb-1.5">Produk B</label>
+          {/* Section Produk B */}
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-muted">Produk B</label>
             <select
               value={idB}
               onChange={(e) => setIdB(e.target.value)}
@@ -195,6 +241,26 @@ export function CompareClient({ products }: { products: Product[] }) {
                 </option>
               ))}
             </select>
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs text-muted font-medium">Jumlah Beli:</span>
+              <div className="flex items-center border border-border rounded-xl bg-surface overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setQtyB((q) => Math.max(1, q - 1))}
+                  className="p-1.5 hover:bg-surface-raised text-muted hover:text-foreground transition-colors"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+                <span className="px-3 text-sm font-bold text-foreground">{qtyB}x</span>
+                <button
+                  type="button"
+                  onClick={() => setQtyB((q) => Math.min(99, q + 1))}
+                  className="p-1.5 hover:bg-surface-raised text-muted hover:text-foreground transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -209,18 +275,18 @@ export function CompareClient({ products }: { products: Product[] }) {
         )}
       </div>
 
-      {sameProduct && (
+      {sameProductAndQty && (
         <div className="bg-warning/10 border border-warning/30 rounded-2xl p-4 text-sm text-warning">
-          Produk A dan B sama. Pilih dua produk berbeda untuk membandingkan.
+          Produk dan jumlah beli A dan B sama persis. Ubah produk atau jumlah beli untuk melihat perbedaan.
         </div>
       )}
 
-      {!metrics || sameProduct ? (
+      {!metrics ? (
         <div className="bg-surface rounded-2xl border border-dashed border-border py-16 text-center">
           <GitCompareArrows className="w-10 h-10 text-muted mx-auto mb-3" />
           <p className="text-muted font-medium">Pilih dua produk untuk melihat perbandingan</p>
           <p className="text-sm text-muted/80 mt-1">
-            Hasil: selisih harga, kuota, masa aktif, harga per GB, harga per hari, kuota per hari
+            Mendukung perbandingan jumlah beli banyak (misal: 2x Paket 7 Hari vs 1x Paket 28 Hari)
           </p>
         </div>
       ) : (
@@ -228,7 +294,7 @@ export function CompareClient({ products }: { products: Product[] }) {
           <div className="grid grid-cols-[1fr_1.15fr_1.15fr_1.1fr] border-b border-border bg-surface-raised/50">
             <div className="p-3 text-xs font-semibold text-muted uppercase tracking-wide">Keterangan</div>
             <div className="p-3 border-l border-border">
-              <p className="text-[10px] text-muted font-bold uppercase">Produk A</p>
+              <p className="text-[10px] text-muted font-bold uppercase">Produk A ({qtyA}x)</p>
               <Link
                 href={`/product/${productA!.slug}`}
                 className="text-sm font-semibold text-foreground hover:text-primary leading-tight line-clamp-2"
@@ -243,7 +309,7 @@ export function CompareClient({ products }: { products: Product[] }) {
               )}
             </div>
             <div className="p-3 border-l border-border">
-              <p className="text-[10px] text-muted font-bold uppercase">Produk B</p>
+              <p className="text-[10px] text-muted font-bold uppercase">Produk B ({qtyB}x)</p>
               <Link
                 href={`/product/${productB!.slug}`}
                 className="text-sm font-semibold text-foreground hover:text-primary leading-tight line-clamp-2"
@@ -289,7 +355,7 @@ export function CompareClient({ products }: { products: Product[] }) {
             )
           })}
 
-          <BestValue products={[productA!, productB!]} metrics={metrics} />
+          <BestValue products={[productA!, productB!]} qtys={[qtyA, qtyB]} metrics={metrics} />
         </div>
       )}
     </div>
@@ -298,9 +364,11 @@ export function CompareClient({ products }: { products: Product[] }) {
 
 function BestValue({
   products,
+  qtys,
   metrics,
 }: {
   products: [Product, Product]
+  qtys: [number, number]
   metrics: Metric[]
 }) {
   const score = [0, 0]
@@ -316,20 +384,21 @@ function BestValue({
 
   const winnerIdx = score[0] === score[1] ? -1 : score[0] > score[1] ? 0 : 1
   const winner = winnerIdx === -1 ? null : products[winnerIdx]
+  const winnerQty = winnerIdx === -1 ? 1 : qtys[winnerIdx]
 
   return (
     <div className="p-4 bg-primary/5 border-t border-border">
       {winner ? (
         <p className="text-sm text-foreground">
-          <span className="font-bold text-primary">Rekomendasi:</span>{' '}
+          <span className="font-bold text-primary">Rekomendasi:</span> Membeli {winnerQty}x{' '}
           <Link href={`/product/${winner.slug}`} className="font-semibold underline decoration-primary/40 underline-offset-2 hover:text-primary">
             {winner.name}
           </Link>{' '}
-          unggul di {score[winnerIdx]} dari {metrics.filter((m) => m.aNum != null && m.bNum != null).length} aspek perbandingan.
+          unggul di {score[winnerIdx]} dari {metrics.filter((m) => m.aNum != null && m.bNum != null && m.better !== 'none').length} aspek perbandingan.
         </p>
       ) : (
         <p className="text-sm text-foreground">
-          <span className="font-bold text-primary">Imbang:</span> kedua produk sama unggul di aspek berbeda.
+          <span className="font-bold text-primary">Imbang:</span> kedua pilihan paket & jumlah beli sama unggul di aspek berbeda.
         </p>
       )}
     </div>
