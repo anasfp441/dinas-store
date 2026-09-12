@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ShoppingBag } from 'lucide-react'
+import { ShoppingBag, Scale } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 export function Header() {
@@ -16,7 +16,16 @@ export function Header() {
             Dinas Store
           </span>
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <Link
+            href="/bandingkan"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary transition-colors"
+          >
+            <Scale className="w-4 h-4" />
+            <span className="hidden sm:inline">Bandingkan</span>
+          </Link>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   )
