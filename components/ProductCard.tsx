@@ -34,7 +34,24 @@ function ProviderLogo({ product }: { product: Product }) {
   )
 }
 
-export function ProductCard({ product, isTopSeller = false }: { product: Product; isTopSeller?: boolean }) {
+function ClosedOverlay() {
+  return (
+    <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-2xl">
+      <div className="absolute inset-0 bg-black/25" />
+      <svg className="absolute inset-0 w-full h-full" aria-hidden="true">
+        <line x1="0" y1="0" x2="100%" y2="100%" stroke="currentColor" strokeWidth="2" className="text-danger/80" />
+        <line x1="100%" y1="0" x2="0" y2="100%" stroke="currentColor" strokeWidth="2" className="text-danger/80" />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="bg-danger text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-md shadow-sm rotate-[-12deg]">
+          Close
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function CardBody({ product, isTopSeller }: { product: Product; isTopSeller: boolean }) {
   const discount = hasDiscount(product)
   const percent = discountPercent(product)
   const price = effectivePrice(product)
@@ -43,15 +60,13 @@ export function ProductCard({ product, isTopSeller = false }: { product: Product
     : product.nominal || ''
 
   return (
-    <Link
-      href={`/product/${product.slug}`}
-      className="group bg-surface rounded-2xl border border-border shadow-card hover:shadow-card-hover hover:-translate-y-0.5 hover:border-primary/30 transition-all p-3.5 flex items-center gap-3"
-    >
+    <>
+      {!product.is_active && <ClosedOverlay />}
       <ProviderLogo product={product} />
 
-      <div className="flex-1 min-w-0">
+      <div className={`flex-1 min-w-0 ${!product.is_active ? 'opacity-60' : ''}`}>
         <div className="flex items-center gap-1.5 mb-0.5">
-          {isTopSeller && product.sold > 0 && (
+          {isTopSeller && product.sold > 0 && product.is_active && (
             <span className="text-[10px] bg-warning/15 text-warning px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
               🔥 Terlaris
             </span>
@@ -86,6 +101,28 @@ export function ProductCard({ product, isTopSeller = false }: { product: Product
           Terjual {product.sold}
         </p>
       </div>
+    </>
+  )
+}
+
+export function ProductCard({ product, isTopSeller = false }: { product: Product; isTopSeller?: boolean }) {
+  const className =
+    'relative bg-surface rounded-2xl border border-border shadow-card p-3.5 flex items-center gap-3'
+
+  if (!product.is_active) {
+    return (
+      <div className={`${className} cursor-not-allowed select-none`} aria-disabled="true">
+        <CardBody product={product} isTopSeller={isTopSeller} />
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      href={`/product/${product.slug}`}
+      className={`${className} group hover:shadow-card-hover hover:-translate-y-0.5 hover:border-primary/30 transition-all`}
+    >
+      <CardBody product={product} isTopSeller={isTopSeller} />
     </Link>
   )
 }

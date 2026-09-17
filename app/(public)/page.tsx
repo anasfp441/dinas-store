@@ -27,7 +27,6 @@ async function getProducts(): Promise<Product[]> {
        providers(name, slug),
        product_categories(categories(id, name, slug))`
     )
-    .eq('is_active', true)
     .order('created_at', { ascending: false })
   if (error) {
     console.error('Error fetching products:', error)

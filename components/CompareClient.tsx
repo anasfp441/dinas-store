@@ -188,7 +188,7 @@ export function CompareClient({ products }: { products: Product[] }) {
               {options.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.providers?.name ? `${p.providers.name} - ` : ''}
-                  {p.name} {p.kuota ? `(${p.kuota} GB)` : ''} {p.masa_aktif ? `${p.masa_aktif}H` : ''}
+                  {p.name} {p.kuota ? `(${p.kuota} GB)` : ''} {p.masa_aktif ? `${p.masa_aktif}H` : ''}{!p.is_active ? ' [Close]' : ''}
                 </option>
               ))}
             </select>
@@ -237,7 +237,7 @@ export function CompareClient({ products }: { products: Product[] }) {
               {options.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.providers?.name ? `${p.providers.name} - ` : ''}
-                  {p.name} {p.kuota ? `(${p.kuota} GB)` : ''} {p.masa_aktif ? `${p.masa_aktif}H` : ''}
+                  {p.name} {p.kuota ? `(${p.kuota} GB)` : ''} {p.masa_aktif ? `${p.masa_aktif}H` : ''}{!p.is_active ? ' [Close]' : ''}
                 </option>
               ))}
             </select>
@@ -295,12 +295,19 @@ export function CompareClient({ products }: { products: Product[] }) {
             <div className="p-3 text-xs font-semibold text-muted uppercase tracking-wide">Keterangan</div>
             <div className="p-3 border-l border-border">
               <p className="text-[10px] text-muted font-bold uppercase">Produk A ({qtyA}x)</p>
-              <Link
-                href={`/product/${productA!.slug}`}
-                className="text-sm font-semibold text-foreground hover:text-primary leading-tight line-clamp-2"
-              >
-                {productA!.name}
-              </Link>
+              {productA!.is_active ? (
+                <Link
+                  href={`/product/${productA!.slug}`}
+                  className="text-sm font-semibold text-foreground hover:text-primary leading-tight line-clamp-2"
+                >
+                  {productA!.name}
+                </Link>
+              ) : (
+                <p className="text-sm font-semibold text-muted leading-tight line-clamp-2">
+                  {productA!.name}{' '}
+                  <span className="text-[10px] bg-danger text-white px-1.5 py-0.5 rounded font-bold uppercase">Close</span>
+                </p>
+              )}
               {productA!.providers?.name && (
                 <p className="text-xs text-muted">{productA!.providers.name}</p>
               )}
@@ -310,12 +317,19 @@ export function CompareClient({ products }: { products: Product[] }) {
             </div>
             <div className="p-3 border-l border-border">
               <p className="text-[10px] text-muted font-bold uppercase">Produk B ({qtyB}x)</p>
-              <Link
-                href={`/product/${productB!.slug}`}
-                className="text-sm font-semibold text-foreground hover:text-primary leading-tight line-clamp-2"
-              >
-                {productB!.name}
-              </Link>
+              {productB!.is_active ? (
+                <Link
+                  href={`/product/${productB!.slug}`}
+                  className="text-sm font-semibold text-foreground hover:text-primary leading-tight line-clamp-2"
+                >
+                  {productB!.name}
+                </Link>
+              ) : (
+                <p className="text-sm font-semibold text-muted leading-tight line-clamp-2">
+                  {productB!.name}{' '}
+                  <span className="text-[10px] bg-danger text-white px-1.5 py-0.5 rounded font-bold uppercase">Close</span>
+                </p>
+              )}
               {productB!.providers?.name && (
                 <p className="text-xs text-muted">{productB!.providers.name}</p>
               )}
@@ -391,9 +405,13 @@ function BestValue({
       {winner ? (
         <p className="text-sm text-foreground">
           <span className="font-bold text-primary">Rekomendasi:</span> Membeli {winnerQty}x{' '}
-          <Link href={`/product/${winner.slug}`} className="font-semibold underline decoration-primary/40 underline-offset-2 hover:text-primary">
-            {winner.name}
-          </Link>{' '}
+          {winner.is_active ? (
+            <Link href={`/product/${winner.slug}`} className="font-semibold underline decoration-primary/40 underline-offset-2 hover:text-primary">
+              {winner.name}
+            </Link>
+          ) : (
+            <span className="font-semibold">{winner.name} (Close)</span>
+          )}{' '}
           unggul di {score[winnerIdx]} dari {metrics.filter((m) => m.aNum != null && m.bNum != null && m.better !== 'none').length} aspek perbandingan.
         </p>
       ) : (

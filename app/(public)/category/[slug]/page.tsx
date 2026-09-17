@@ -32,7 +32,6 @@ export default async function CategoryPage({
        product_categories!inner(categories(id, name, slug))`
     )
     .eq('product_categories.category_id', category.id)
-    .eq('is_active', true)
     .order('created_at', { ascending: false })
 
   const products = (rawProducts || []).map((raw: any) => ({

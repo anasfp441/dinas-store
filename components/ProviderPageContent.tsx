@@ -54,7 +54,6 @@ export async function ProviderPageContent({
   let query = supabase
     .from('products')
     .select(`${PUBLIC_PRODUCT_COLUMNS}, providers(name, slug), ${categoriesEmbed}`)
-    .eq('is_active', true)
 
   // Filter by provider_id (using provider's DB id)
   query = query.eq('provider_id', provider.id)

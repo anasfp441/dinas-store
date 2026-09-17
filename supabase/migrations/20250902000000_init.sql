@@ -177,7 +177,7 @@ create policy "public read providers"
 
 drop policy if exists "public read products" on public.products;
 create policy "public read products"
-  on public.products for select using (is_active = true);
+  on public.products for select using (true);
 
 drop policy if exists "public read product_categories" on public.product_categories;
 create policy "public read product_categories"

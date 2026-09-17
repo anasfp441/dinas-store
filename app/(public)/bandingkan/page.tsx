@@ -16,7 +16,6 @@ async function getProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
     .select(`${PUBLIC_PRODUCT_COLUMNS}, providers(name, slug)`)
-    .eq('is_active', true)
     .order('created_at', { ascending: false })
   if (error) {
     console.error('Error fetching products:', error)

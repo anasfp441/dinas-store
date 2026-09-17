@@ -25,7 +25,6 @@ export default async function ProductDetailPage({
       'id,provider_id,name,slug,nominal,kuota,masa_aktif,harga_modal,harga_jual,harga_diskon,description,image_url,sold,is_active,created_at,providers(name,slug),product_categories(categories(id,name,slug))'
     )
     .eq('slug', slug)
-    .eq('is_active', true)
     .single()
 
   if (error || !data) notFound()
@@ -71,16 +70,29 @@ export default async function ProductDetailPage({
               src={product.image_url}
               alt={product.name}
               fill
-              className="object-cover"
+              className={`object-cover ${!product.is_active ? 'opacity-50' : ''}`}
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           ) : (
-            <div className="text-8xl">📦</div>
+            <div className={`text-8xl ${!product.is_active ? 'opacity-50' : ''}`}>📦</div>
           )}
-          {discount && (
+          {discount && product.is_active && (
             <span className="absolute top-4 left-4 bg-danger text-white font-bold px-3 py-1.5 rounded-full text-sm shadow-sm">
               -{percent}%
             </span>
+          )}
+          {!product.is_active && (
+            <>
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true">
+                <line x1="0" y1="0" x2="100%" y2="100%" stroke="currentColor" strokeWidth="3" className="text-danger/80" />
+                <line x1="100%" y1="0" x2="0" y2="100%" stroke="currentColor" strokeWidth="3" className="text-danger/80" />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-danger text-white text-lg font-bold uppercase tracking-widest px-5 py-2 rounded-md shadow-sm rotate-[-12deg]">
+                  Close
+                </span>
+              </span>
+            </>
           )}
         </div>
         <div className="space-y-5">
@@ -89,6 +101,11 @@ export default async function ProductDetailPage({
               {product.providers?.name && (
                 <span className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
                   {product.providers.name}
+                </span>
+              )}
+              {!product.is_active && (
+                <span className="text-xs bg-danger text-white px-2.5 py-1 rounded-full font-bold uppercase tracking-wide">
+                  Close
                 </span>
               )}
             </div>
@@ -134,7 +151,17 @@ export default async function ProductDetailPage({
             {product.description}
           </div>
 
-          <BuyButton productId={product.id} price={price} waLink={waLink} />
+          {product.is_active ? (
+            <BuyButton productId={product.id} price={price} waLink={waLink} />
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="inline-flex items-center gap-2 bg-muted/40 text-muted font-semibold py-3 px-8 rounded-xl cursor-not-allowed"
+            >
+              Produk Close
+            </button>
+          )}
         </div>
       </div>
     </main>
