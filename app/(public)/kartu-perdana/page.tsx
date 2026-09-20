@@ -27,9 +27,6 @@ export default function KartuPerdanaPage() {
           />
         ))}
       </div>
-      <div className="bg-surface rounded-2xl border border-dashed border-border py-16 text-center">
-        <p className="text-muted font-medium">Halaman dalam pengembangan</p>
-      </div>
     </main>
   )
 }

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { ProductCard } from '@/components/ProductCard'
 import { Product, Category, Provider } from '@/types'
-import { effectivePrice, discountPercent } from '@/utils/product'
+import { effectivePrice, discountPercent, kuotaInRange, KUOTA_RANGES, priceInRange, PRICE_RANGES } from '@/utils/product'
 import { Search, X } from 'lucide-react'
 
 export function ProductCatalog({
@@ -18,7 +18,22 @@ export function ProductCatalog({
   const [query, setQuery] = useState('')
   const [categorySlug, setCategorySlug] = useState('all')
   const [providerSlug, setProviderSlug] = useState('all')
+  const [kuotaRange, setKuotaRange] = useState('all')
+  const [masaAktif, setMasaAktif] = useState('all')
+  const [priceRange, setPriceRange] = useState('all')
   const [sort, setSort] = useState('terlaris')
+
+  const masaAktifOptions = useMemo(() => {
+    const values = new Set<string>()
+    products.forEach((p) => {
+      if (p.masa_aktif) values.add(p.masa_aktif)
+    })
+    return Array.from(values).sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ''), 10) || 0
+      const numB = parseInt(b.replace(/\D/g, ''), 10) || 0
+      return numA - numB
+    })
+  }, [products])
 
   const filtered = useMemo(() => {
     let result = products.filter((p) => {
@@ -36,7 +51,10 @@ export function ProductCatalog({
         (p.categories || []).some((c) => c.slug === categorySlug)
       const matchesProvider =
         providerSlug === 'all' || p.providers?.slug === providerSlug
-      return matchesQuery && matchesCategory && matchesProvider
+      const matchesKuota = kuotaInRange(p, kuotaRange)
+      const matchesMasaAktif = masaAktif === 'all' || p.masa_aktif === masaAktif
+      const matchesPrice = priceInRange(p, priceRange)
+      return matchesQuery && matchesCategory && matchesProvider && matchesKuota && matchesMasaAktif && matchesPrice
     })
 
     if (sort === 'terbaru') {
@@ -54,7 +72,7 @@ export function ProductCatalog({
     }
 
     return result
-  }, [products, query, categorySlug, providerSlug, sort])
+  }, [products, query, categorySlug, providerSlug, kuotaRange, masaAktif, priceRange, sort])
 
   const topSellerIds = useMemo(() => {
     return [...products]
@@ -64,13 +82,21 @@ export function ProductCatalog({
       .map((p) => p.id)
   }, [products])
 
-  const hasActiveFilter = query !== '' || categorySlug !== 'all' || providerSlug !== 'all'
-
+  const hasActiveFilter =
+    query !== '' ||
+    categorySlug !== 'all' ||
+    providerSlug !== 'all' ||
+    kuotaRange !== 'all' ||
+    masaAktif !== 'all' ||
+    priceRange !== 'all'
 
   function resetFilters() {
     setQuery('')
     setCategorySlug('all')
     setProviderSlug('all')
+    setKuotaRange('all')
+    setMasaAktif('all')
+    setPriceRange('all')
   }
 
   return (
@@ -117,6 +143,41 @@ export function ProductCatalog({
             <option value="all">Semua Product</option>
             {providers.map((p) => (
               <option key={p.id} value={p.slug}>{p.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={kuotaRange}
+            onChange={(e) => setKuotaRange(e.target.value)}
+            className="input-field w-auto"
+          >
+            <option value="all">Semua Kuota</option>
+            {KUOTA_RANGES.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+
+          {masaAktifOptions.length > 0 && (
+            <select
+              value={masaAktif}
+              onChange={(e) => setMasaAktif(e.target.value)}
+              className="input-field w-auto"
+            >
+              <option value="all">Semua Masa Aktif</option>
+              {masaAktifOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          )}
+
+          <select
+            value={priceRange}
+            onChange={(e) => setPriceRange(e.target.value)}
+            className="input-field w-auto"
+          >
+            <option value="all">Semua Harga</option>
+            {PRICE_RANGES.filter((r) => r.value !== 'all').map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
             ))}
           </select>
 

@@ -1,24 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
-import { Category, Product, Provider } from '@/types'
+import { Category, PackageGroup, Product, Provider } from '@/types'
 import Image from 'next/image'
 
 export function ProductForm({
   product,
   categories,
   providers,
+  packageGroups = [],
   initialCategoryIds,
   onDone,
 }: {
   product?: Product | null
   categories: Category[]
   providers: Provider[]
+  packageGroups?: PackageGroup[]
   initialCategoryIds: string[]
   onDone: () => void
 }) {
   const [providerId, setProviderId] = useState(product?.provider_id ?? '')
+  const [packageGroupId, setPackageGroupId] = useState((product as any)?.package_group_id ?? product?.package_group?.id ?? '')
   const [name, setName] = useState(product?.name ?? '')
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategoryIds)
   const [kuota, setKuota] = useState(product?.kuota ?? '')
@@ -56,6 +59,19 @@ export function ProductForm({
       active = false
     }
   }, [])
+
+  const availableGroups = useMemo(() => {
+    if (!providerId) return []
+    return packageGroups.filter((g) => g.provider_id === providerId)
+  }, [packageGroups, providerId])
+
+  function handleProviderChange(id: string) {
+    setProviderId(id)
+    const stillValid = packageGroups.some((g) => g.id === packageGroupId && g.provider_id === id)
+    if (!stillValid) {
+      setPackageGroupId('')
+    }
+  }
 
   function slugify(text: string) {
     return text
@@ -127,6 +143,7 @@ export function ProductForm({
 
     const payload = {
       provider_id: providerId,
+      package_group_id: packageGroupId || null,
       name: name.trim(),
       slug: slugify(slugBase),
       kuota: kuota || null,
@@ -186,19 +203,38 @@ export function ProductForm({
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && <p className="text-danger text-sm bg-danger/10 rounded-lg px-3 py-2">{error}</p>}
 
-      <div>
-        <label className="block text-sm font-medium mb-1 text-foreground">Provider *</label>
-        <select
-          value={providerId}
-          onChange={(e) => setProviderId(e.target.value)}
-          className="input-field"
-          required
-        >
-          <option value="">Pilih provider</option>
-          {providers.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1 text-foreground">Provider *</label>
+          <select
+            value={providerId}
+            onChange={(e) => handleProviderChange(e.target.value)}
+            className="input-field"
+            required
+          >
+            <option value="">Pilih provider</option>
+            {providers.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1 text-foreground">Grup Paket (Khusus Paket Data)</label>
+          <select
+            value={packageGroupId}
+            onChange={(e) => setPackageGroupId(e.target.value)}
+            className="input-field"
+            disabled={!providerId || availableGroups.length === 0}
+          >
+            <option value="">Tanpa Grup (Lainnya)</option>
+            {availableGroups.map((g) => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+          {providerId && availableGroups.length === 0 && (
+            <p className="text-xs text-muted mt-1">Provider ini belum punya grup paket</p>
+          )}
+        </div>
       </div>
 
       <div>

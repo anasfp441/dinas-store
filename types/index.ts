@@ -29,6 +29,7 @@ export type Product = {
   created_at: string
   providers?: Provider | null
   categories?: Category[]
+  package_group?: PackageGroup | null
 }
 
 export type BillStatus = 'pending' | 'approved' | 'rejected'
@@ -64,4 +65,15 @@ export type Profile = {
   full_name: string | null
   role: 'admin' | 'user'
   created_at: string
+}
+
+export type PackageGroup = {
+  id: string
+  provider_id: string
+  name: string
+  slug: string
+  description?: string | null
+  sort_order: number
+  created_at: string
+  providers?: Provider | null
 }

@@ -1,4 +1,4 @@
-import { ProviderPageContent } from '@/components/ProviderPageContent'
+import { ProviderPaketDataPage } from '@/components/ProviderPaketDataPage'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,5 +8,5 @@ export default async function PaketDataProviderPage({
   params: Promise<{ provider: string }>
 }) {
   const { provider } = await params
-  return <ProviderPageContent slug={provider} basePath="/paket-data" label="Paket Data" categorySlug="paket-data" />
+  return <ProviderPaketDataPage slug={provider} />
 }

@@ -2,16 +2,17 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
-import { Category, Product, Provider } from '@/types'
+import { Category, PackageGroup, Product, Provider } from '@/types'
 import { ProductForm } from '@/components/ProductForm'
 import { AdminProductCard } from '@/components/AdminProductCard'
 import { Plus, Pencil, Trash2, X, Search } from 'lucide-react'
-import { formatPrice } from '@/utils/product'
+import { formatPrice, kuotaInRange, KUOTA_RANGES, priceInRange, PRICE_RANGES } from '@/utils/product'
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [providers, setProviders] = useState<Provider[]>([])
+  const [packageGroups, setPackageGroups] = useState<PackageGroup[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
 
@@ -19,17 +20,19 @@ export default function AdminProductsPage() {
     loadProducts()
     loadCategories()
     loadProviders()
+    loadPackageGroups()
   }, [])
 
   async function loadProducts() {
     const { data } = await getSupabase()
       .from('products')
       .select(
-        'id, provider_id, name, slug, nominal, kuota, masa_aktif, harga_modal, harga_jual, harga_diskon, description, image_url, sold, is_active, created_at, providers(name, slug), product_categories(categories(id, name, slug))'
+        'id, provider_id, package_group_id, name, slug, nominal, kuota, masa_aktif, harga_modal, harga_jual, harga_diskon, description, image_url, sold, is_active, created_at, providers(name, slug), package_groups(id, name, slug), product_categories(categories(id, name, slug))'
       )
       .order('created_at', { ascending: false })
     const normalized = data?.map((p: any) => ({
       ...p,
+      package_group: p.package_groups || null,
       categories: p.product_categories?.map((pc: any) => pc.categories) || [],
     })) || []
     setProducts(normalized)
@@ -45,22 +48,80 @@ export default function AdminProductsPage() {
     if (data) setProviders(data)
   }
 
+  async function loadPackageGroups() {
+    const { data } = await getSupabase().from('package_groups').select('*').order('sort_order').order('name')
+    if (data) setPackageGroups(data)
+  }
+
   const [query, setQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterCategory, setFilterCategory] = useState('all')
+  const [filterProvider, setFilterProvider] = useState('all')
+  const [filterKuota, setFilterKuota] = useState('all')
+  const [filterMasaAktif, setFilterMasaAktif] = useState('all')
+  const [filterPrice, setFilterPrice] = useState('all')
+
+  const masaAktifOptions = useMemo(() => {
+    const values = new Set<string>()
+    products.forEach((p) => {
+      if (p.masa_aktif) values.add(p.masa_aktif)
+    })
+    return Array.from(values).sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ''), 10) || 0
+      const numB = parseInt(b.replace(/\D/g, ''), 10) || 0
+      return numA - numB
+    })
+  }, [products])
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
+      const q = query.toLowerCase()
       const matchesQuery =
-        !query ||
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        (p.providers?.name || '').toLowerCase().includes(query.toLowerCase()) ||
-        (p.nominal || '').toLowerCase().includes(query.toLowerCase())
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        (p.providers?.name || '').toLowerCase().includes(q) ||
+        (p.nominal || '').toLowerCase().includes(q) ||
+        (p.kuota || '').toLowerCase().includes(q) ||
+        (p.masa_aktif || '').toLowerCase().includes(q) ||
+        (p.description || '').toLowerCase().includes(q)
+
       const matchesStatus =
         filterStatus === 'all' ||
         (filterStatus === 'active' ? p.is_active : !p.is_active)
-      return matchesQuery && matchesStatus
+
+      const matchesCategory =
+        filterCategory === 'all' ||
+        (p.categories || []).some((c) => c.id === filterCategory || c.slug === filterCategory)
+
+      const matchesProvider =
+        filterProvider === 'all' ||
+        p.provider_id === filterProvider ||
+        p.providers?.slug === filterProvider
+
+      const matchesKuota = kuotaInRange(p, filterKuota)
+      const matchesMasaAktif = filterMasaAktif === 'all' || p.masa_aktif === filterMasaAktif
+      const matchesPrice = priceInRange(p, filterPrice)
+
+      return (
+        matchesQuery &&
+        matchesStatus &&
+        matchesCategory &&
+        matchesProvider &&
+        matchesKuota &&
+        matchesMasaAktif &&
+        matchesPrice
+      )
     })
-  }, [products, query, filterStatus])
+  }, [
+    products,
+    query,
+    filterStatus,
+    filterCategory,
+    filterProvider,
+    filterKuota,
+    filterMasaAktif,
+    filterPrice,
+  ])
 
   async function handleDelete(id: string) {
     if (!confirm('Hapus produk ini?')) return
@@ -87,9 +148,21 @@ export default function AdminProductsPage() {
   function resetFilters() {
     setQuery('')
     setFilterStatus('all')
+    setFilterCategory('all')
+    setFilterProvider('all')
+    setFilterKuota('all')
+    setFilterMasaAktif('all')
+    setFilterPrice('all')
   }
 
-  const hasFilter = query !== '' || filterStatus !== 'all'
+  const hasFilter =
+    query !== '' ||
+    filterStatus !== 'all' ||
+    filterCategory !== 'all' ||
+    filterProvider !== 'all' ||
+    filterKuota !== 'all' ||
+    filterMasaAktif !== 'all' ||
+    filterPrice !== 'all'
 
   return (
     <div>
@@ -124,6 +197,7 @@ export default function AdminProductsPage() {
               </button>
             )}
           </div>
+
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -133,6 +207,64 @@ export default function AdminProductsPage() {
             <option value="active">Aktif</option>
             <option value="inactive">Nonaktif</option>
           </select>
+
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="input-field w-auto"
+          >
+            <option value="all">Semua Kategori</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterProvider}
+            onChange={(e) => setFilterProvider(e.target.value)}
+            className="input-field w-auto"
+          >
+            <option value="all">Semua Provider</option>
+            {providers.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterKuota}
+            onChange={(e) => setFilterKuota(e.target.value)}
+            className="input-field w-auto"
+          >
+            <option value="all">Semua Kuota</option>
+            {KUOTA_RANGES.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+
+          {masaAktifOptions.length > 0 && (
+            <select
+              value={filterMasaAktif}
+              onChange={(e) => setFilterMasaAktif(e.target.value)}
+              className="input-field w-auto"
+            >
+              <option value="all">Semua Masa Aktif</option>
+              {masaAktifOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          )}
+
+          <select
+            value={filterPrice}
+            onChange={(e) => setFilterPrice(e.target.value)}
+            className="input-field w-auto"
+          >
+            <option value="all">Semua Harga</option>
+            {PRICE_RANGES.filter((r) => r.value !== 'all').map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+
           {hasFilter && (
             <button
               onClick={resetFilters}
@@ -166,6 +298,7 @@ export default function AdminProductsPage() {
                 product={editing}
                 categories={categories}
                 providers={providers}
+                packageGroups={packageGroups}
                 initialCategoryIds={editing?.categories?.map((c) => c.id) || []}
                 onDone={closeModal}
               />
