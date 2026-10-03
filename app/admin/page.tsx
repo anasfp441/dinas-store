@@ -47,7 +47,7 @@ export default async function AdminDashboardPage() {
   // ---- Bill approved (semua, untuk hitung keuangan) ----
   const { data: bills } = await supabase
     .from('bills')
-    .select('id, quantity, created_at, product_id, status')
+    .select('id, quantity, total_price, harga_modal, harga_satuan, created_at, product_id, status')
     .eq('status', 'approved')
 
   // ---- Produk + data jual ----
@@ -74,8 +74,9 @@ export default async function AdminDashboardPage() {
     const p = productMap[b.product_id]
     if (!p) return
     const qty = b.quantity || 1
-    const modal = (p.harga_modal || 0) * qty
-    const omset = (p.harga_jual || 0) * qty
+    const modal = (b.harga_modal || 0) * qty
+    const omset =
+      (b.total_price && b.total_price > 0) ? b.total_price : (b.harga_satuan || 0) * qty
     totalModal += modal
     totalOmset += omset
     if (new Date(b.created_at) >= todayStart) {

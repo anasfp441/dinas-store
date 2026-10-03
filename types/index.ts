@@ -39,6 +39,8 @@ export type Bill = {
   product_id: string
   quantity: number
   total_price: number
+  harga_modal: number
+  harga_satuan: number
   status: BillStatus
   created_at: string
   approved_at: string | null

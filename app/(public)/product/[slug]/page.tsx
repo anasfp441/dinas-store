@@ -152,7 +152,7 @@ export default async function ProductDetailPage({
           </div>
 
           {product.is_active ? (
-            <BuyButton productId={product.id} price={price} waLink={waLink} />
+            <BuyButton productId={product.id} waLink={waLink} />
           ) : (
             <button
               type="button"

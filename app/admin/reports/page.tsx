@@ -55,7 +55,7 @@ export default async function AdminReportsPage({
 
   const { data: rawBills, error: billErr } = await supabase
     .from('bills')
-    .select('id, quantity, total_price, created_at, status, product_id')
+    .select('id, quantity, total_price, harga_modal, harga_satuan, created_at, status, product_id')
     .eq('status', 'approved')
   if (billErr) console.error('Error fetching bills:', billErr.message)
 
@@ -128,8 +128,8 @@ export default async function AdminReportsPage({
     const p = productMap[b.product_id]
     if (!p) continue
     const qty = b.quantity || 1
-    const m = (p.harga_modal || 0) * qty
-    const o = (p.harga_jual || 0) * qty
+    const m = (b.harga_modal || 0) * qty
+    const o = (b.total_price && b.total_price > 0) ? b.total_price : (b.harga_satuan || 0) * qty
     modal += m
     omset += o
     if (!detailMap[p.id]) {

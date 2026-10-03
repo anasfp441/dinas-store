@@ -6,11 +6,9 @@ import { Loader2 } from 'lucide-react'
 
 export function BuyButton({
   productId,
-  price,
   waLink,
 }: {
   productId: string
-  price: number
   waLink: string
 }) {
   const [loading, setLoading] = useState(false)
@@ -20,7 +18,7 @@ export function BuyButton({
     try {
       const { error } = await getSupabase()
         .from('bills')
-        .insert({ product_id: productId, quantity: 1, total_price: price })
+        .insert({ product_id: productId, quantity: 1 })
       if (error) console.error('Gagal membuat bill:', error.message)
     } catch (err) {
       console.error('Gagal membuat bill:', err)
