@@ -44,6 +44,7 @@ export default function AdminLayout({
     { href: '/admin/products', label: 'Produk' },
     { href: '/admin/bills', label: 'Pesanan' },
     { href: '/admin/reports', label: 'Laporan' },
+    { href: '/admin/catatan-keuangan', label: 'Catatan Keuangan' },
     { href: '/admin/categories', label: 'Kategori' },
     { href: '/admin/package-groups', label: 'Grup Paket' },
     { href: '/admin/providers', label: 'Provider' },

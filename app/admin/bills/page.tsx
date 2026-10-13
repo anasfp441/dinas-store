@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { Bill, BillStatus, BILL_STATUS_LABELS } from '@/types'
 import { formatPrice } from '@/utils/product'
-import { Check, X, RefreshCw } from 'lucide-react'
+import { Check, X, RefreshCw, Pencil, Trash2 } from 'lucide-react'
 import { AdminBillCard } from '@/components/AdminBillCard'
+import { BillApproveModal } from '@/components/BillApproveModal'
+import { BillEditModal } from '@/components/BillEditModal'
 
 const STATUS_STYLES: Record<BillStatus, string> = {
   pending: 'bg-warning/15 text-warning',
@@ -17,6 +19,8 @@ export default function AdminBillsPage() {
   const [bills, setBills] = useState<Bill[]>([])
   const [filter, setFilter] = useState<'all' | BillStatus>('all')
   const [loading, setLoading] = useState(false)
+  const [approving, setApproving] = useState<Bill | null>(null)
+  const [editing, setEditing] = useState<Bill | null>(null)
 
   const loadBills = useCallback(async () => {
     setLoading(true)
@@ -40,6 +44,16 @@ export default function AdminBillsPage() {
       .update({ status })
       .eq('id', bill.id)
     if (!error) loadBills()
+  }
+
+  async function handleDelete(bill: Bill) {
+    if (!confirm(`Hapus pesanan "${bill.products?.name || 'ini'}"?`)) return
+    const { error } = await getSupabase().from('bills').delete().eq('id', bill.id)
+    if (error) {
+      alert('Gagal menghapus: ' + error.message)
+    } else {
+      loadBills()
+    }
   }
 
   function formatDate(iso: string) {
@@ -99,7 +113,10 @@ export default function AdminBillsPage() {
               <AdminBillCard
                 key={b.id}
                 bill={b}
+                onApprove={setApproving}
                 onSetStatus={setStatus}
+                onEdit={setEditing}
+                onDelete={handleDelete}
               />
             ))}
           </div>
@@ -113,7 +130,8 @@ export default function AdminBillsPage() {
                 <th className="px-4 py-3 text-left font-semibold text-foreground">Jml</th>
                 <th className="px-4 py-3 text-left font-semibold text-foreground">Total</th>
                 <th className="px-4 py-3 text-left font-semibold text-foreground">Status</th>
-                <th className="px-4 py-3 text-left font-semibold text-foreground">Waktu</th>
+                <th className="px-4 py-3 text-left font-semibold text-foreground">Tanggal</th>
+                <th className="px-4 py-3 text-left font-semibold text-foreground">Deskripsi</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -140,25 +158,44 @@ export default function AdminBillsPage() {
                   <td className="px-4 py-3 text-muted text-xs">
                     {formatDate(b.created_at)}
                   </td>
+                  <td className="px-4 py-3 text-foreground text-sm max-w-xs truncate">
+                    {b.description || '-'}
+                  </td>
                   <td className="px-4 py-3">
-                    {b.status === 'pending' && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setStatus(b, 'approved')}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-success/15 text-success hover:bg-success hover:text-white transition-colors"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => setStatus(b, 'rejected')}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-danger/15 text-danger hover:bg-danger hover:text-white transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          Reject
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setEditing(b)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-primary/15 text-primary hover:bg-primary hover:text-white transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(b)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-danger/15 text-danger hover:bg-danger hover:text-white transition-colors"
+                        title="Hapus"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      {b.status === 'pending' && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setApproving(b)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-success/15 text-success hover:bg-success hover:text-white transition-colors"
+                          >
+                                             <Check className="w-3.5 h-3.5" />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => setStatus(b, 'rejected')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-danger/15 text-danger hover:bg-danger hover:text-white transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -166,6 +203,58 @@ export default function AdminBillsPage() {
           </table>
         </div>
         </>
+      )}
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Edit Pesanan</h2>
+              <button
+                onClick={() => setEditing(null)}
+                className="p-1 text-muted hover:text-foreground rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-5">
+              <BillEditModal
+                bill={editing}
+                onDone={() => {
+                  setEditing(null)
+                  loadBills()
+                }}
+                onCancel={() => setEditing(null)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {approving && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Approve & Catat</h2>
+              <button
+                onClick={() => setApproving(null)}
+                className="p-1 text-muted hover:text-foreground rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-5">
+              <BillApproveModal
+                bill={approving}
+                onDone={() => {
+                  setApproving(null)
+                  loadBills()
+                }}
+                onCancel={() => setApproving(null)}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

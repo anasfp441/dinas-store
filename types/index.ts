@@ -41,6 +41,7 @@ export type Bill = {
   total_price: number
   harga_modal: number
   harga_satuan: number
+  description: string | null
   status: BillStatus
   created_at: string
   approved_at: string | null
@@ -53,6 +54,19 @@ export const BILL_STATUS_LABELS: Record<BillStatus, string> = {
   pending: 'Menunggu',
   approved: 'Disetujui',
   rejected: 'Ditolak',
+}
+
+export type FinancialType = 'pemasukan' | 'pengeluaran'
+
+export type FinancialTransaction = {
+  id: string
+  tipe: FinancialType
+  jumlah: number
+  keterangan: string | null
+  tanggal: string
+  ref_bill_id: string | null
+  created_at: string
+  is_modal: boolean
 }
 
 export type ReportData = {
