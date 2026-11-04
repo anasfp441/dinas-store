@@ -43,6 +43,7 @@ export default function AdminLayout({
     { href: '/admin', label: 'Dashboard' },
     { href: '/admin/products', label: 'Produk' },
     { href: '/admin/bills', label: 'Pesanan' },
+    { href: '/admin/page-settings', label: 'Info Modal' },
     { href: '/admin/reports', label: 'Laporan' },
     { href: '/admin/catatan-keuangan', label: 'Catatan Keuangan' },
     { href: '/admin/categories', label: 'Kategori' },

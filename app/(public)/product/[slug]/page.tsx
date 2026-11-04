@@ -40,20 +40,17 @@ export default async function ProductDetailPage({
   const price = effectivePrice(product)
 
   const dataRows: { label: string; value: string }[] = []
-  if (product.nominal) dataRows.push({ label: 'Nominal', value: product.nominal })
   if (product.kuota) dataRows.push({ label: 'Paket', value: `${product.kuota} GB` })
   if (product.masa_aktif) dataRows.push({ label: 'Masa Aktif', value: `${product.masa_aktif} Hari` })
   if (product.providers?.name) dataRows.push({ label: 'Provider', value: product.providers.name })
 
   const message =
-    `Halo, saya mau order:\n` +
+    `Halo, saya mau beli:\n` +
     `Produk: ${product.name}\n` +
     `${product.providers?.name ? 'Provider: ' + product.providers.name + '\n' : ''}` +
-    `${product.nominal ? 'Nominal: ' + product.nominal + '\n' : ''}` +
     `${product.kuota ? 'Paket: ' + product.kuota + ' GB\n' : ''}` +
     `${product.masa_aktif ? 'Masa Aktif: ' + product.masa_aktif + ' Hari\n' : ''}` +
-    `Harga: ${formatPrice(price)}\n\n` +
-    `Silakan kirimkan cara pembayarannya ya. Terima kasih!`
+    `Harga: ${formatPrice(price)}\n`
 
   const waLink = generateWaLink(message, waNumber)
 

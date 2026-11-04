@@ -93,3 +93,19 @@ export type PackageGroup = {
   created_at: string
   providers?: Provider | null
 }
+
+export type AdminPageInfo = {
+  id: string
+  title: string
+  message: string
+  is_active: boolean
+  sort_order: number
+  created_at: string
+}
+
+export type StoreSettings = {
+  id: string
+  is_closed: boolean
+  closed_message: string
+  updated_at: string
+}

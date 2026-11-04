@@ -4,6 +4,8 @@ import { Product, Category, Provider } from '@/types'
 import { PUBLIC_PRODUCT_COLUMNS } from '@/utils/product'
 import Link from 'next/link'
 import { Zap, Calendar, Phone, Ticket, PlugZap, LayoutGrid, Wifi, Gift, Signal } from 'lucide-react'
+import { InfoModal } from '@/components/InfoModal'
+import { ClosedModal } from '@/components/ClosedModal'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,6 +99,8 @@ export default async function CatalogPage() {
         </div>
       </section>
 
+      <ClosedModal />
+      <InfoModal />
       <ProductCatalog
         products={products}
         categories={categories}
