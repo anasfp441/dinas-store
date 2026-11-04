@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
-import { StoreSnapshot } from 'lucide-react'
 
 export function ClosedModal() {
   const [infos, setInfos] = useState<any[]>([])
