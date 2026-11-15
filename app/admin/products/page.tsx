@@ -29,7 +29,7 @@ export default function AdminProductsPage() {
       .select(
         'id, provider_id, package_group_id, name, slug, nominal, kuota, masa_aktif, harga_modal, harga_jual, harga_diskon, description, image_url, sold, is_active, created_at, providers(name, slug), package_groups(id, name, slug), product_categories(categories(id, name, slug))'
       )
-      .order('created_at', { ascending: false })
+      .order('name', { ascending: true })
     const normalized = data?.map((p: any) => ({
       ...p,
       package_group: p.package_groups || null,
