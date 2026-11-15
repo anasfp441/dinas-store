@@ -2,15 +2,20 @@
 
 import { Product, Provider } from '@/types'
 import { formatPrice } from '@/utils/product'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 
-export function AdminProductCard({ product, onEdit, onDelete }: {
+export function AdminProductCard({ product, onEdit, onDelete, onToggleActive }: {
   product: Product
   onEdit: (p: Product) => void
   onDelete: (id: string) => void
+  onToggleActive: (id: string, current: boolean) => void
 }) {
   const [deleting, setDeleting] = useState(false)
+
+  const handleToggleActive = () => {
+    onToggleActive(product.id, product.is_active)
+  }
 
   const handleDelete = async () => {
     if (!confirm('Hapus produk ini?')) return
@@ -77,6 +82,13 @@ export function AdminProductCard({ product, onEdit, onDelete }: {
             title="Edit"
           >
             <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleToggleActive}
+            className="p-2 text-success hover:bg-success/10 rounded-lg transition-colors"
+            title={product.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+          >
+            {product.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
           <button
             onClick={handleDelete}

@@ -5,7 +5,7 @@ import { getSupabase } from '@/lib/supabase/client'
 import { Category, PackageGroup, Product, Provider } from '@/types'
 import { ProductForm } from '@/components/ProductForm'
 import { AdminProductCard } from '@/components/AdminProductCard'
-import { Plus, Pencil, Trash2, X, Search } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Search, Eye, EyeOff } from 'lucide-react'
 import { formatPrice, kuotaInRange, KUOTA_RANGES, priceInRange, PRICE_RANGES } from '@/utils/product'
 
 export default function AdminProductsPage() {
@@ -126,6 +126,14 @@ export default function AdminProductsPage() {
   async function handleDelete(id: string) {
     if (!confirm('Hapus produk ini?')) return
     const { error } = await getSupabase().from('products').delete().eq('id', id)
+    if (!error) loadProducts()
+  }
+
+  async function handleToggleActive(id: string, current: boolean) {
+    const { error } = await getSupabase()
+      .from('products')
+      .update({ is_active: !current })
+      .eq('id', id)
     if (!error) loadProducts()
   }
 
@@ -315,6 +323,7 @@ export default function AdminProductsPage() {
             product={p}
             onEdit={openEdit}
             onDelete={handleDelete}
+            onToggleActive={handleToggleActive}
           />
         ))}
         {filtered.length === 0 && (
@@ -402,6 +411,13 @@ export default function AdminProductsPage() {
                       title="Edit"
                     >
                       <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleToggleActive(p.id, p.is_active)}
+                      className="p-1.5 text-success hover:bg-success/10 rounded-lg transition-colors"
+                      title={p.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+                    >
+                      {p.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                     <button
                       onClick={() => handleDelete(p.id)}

@@ -61,7 +61,7 @@ export default function AdminPageInfoSettingsPage() {
     if (editing) {
       const { error } = await getSupabase()
         .from('admin_page_info')
-        .update({ ...formData, updated_at: new Date().toISOString() })
+        .update(formData)
         .eq('id', editing.id)
       if (!error) loadInfos()
     } else {
@@ -91,6 +91,7 @@ export default function AdminPageInfoSettingsPage() {
   function closeModal() {
     setModalOpen(false)
     setEditing(null)
+    loadInfos()
   }
 
   return (

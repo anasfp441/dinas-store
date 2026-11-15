@@ -15,6 +15,7 @@ export function InfoModal() {
         .from('admin_page_info')
         .select('*')
         .eq('is_active', true)
+        .eq('type', 'info')
         .order('sort_order', { ascending: true })
 
       if (data && data.length > 0) {
